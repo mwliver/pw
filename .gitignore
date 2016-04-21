@@ -1,0 +1,30 @@
+# pw
+webapi/
+git.properties
+
+*target*
+*.war
+*.ear
+*.class
+out/
+
+# eclipse specific git ignore
+.project
+.metadata
+bin/**
+tmp/**
+tmp/**/*
+*.tmp
+*.bak
+*.swp
+*~.nib
+.classpath
+.settings/
+.loadpath
+
+# Intellij IDEA
+.idea/
+*.iml
+*.iws
+.DS_Store
+log/
