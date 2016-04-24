@@ -2,15 +2,16 @@ package com.github.view;
 
 import javax.swing.*;
 import java.awt.*;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
 
-/**
- * Copyright (C) Coderion sp. z o.o
- */
 public class Start {
 
     public static void main(String[] args) {
+        ApplicationContext context = new ClassPathXmlApplicationContext("beans.xml", "beans-datasource.xml");
+
         SwingUtilities.invokeLater(() -> {
-            MainForm mainForm = new MainForm();
+            MainForm mainForm = (MainForm)context.getBean("mainForm");
             try {
                 UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
             } catch (IllegalAccessException | ClassNotFoundException | UnsupportedLookAndFeelException | InstantiationException e) {
