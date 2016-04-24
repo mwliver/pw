@@ -1,12 +1,11 @@
 package com.github.model;
 
+import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import java.io.Serializable;
 
-/**
- * Copyright (C) Coderion sp. z o.o
- */
+@Entity
 public class Directory implements Serializable {
 
     @Id
