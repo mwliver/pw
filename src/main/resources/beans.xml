@@ -29,6 +29,7 @@
         <property name="jpaProperties">
             <map>
                 <entry key="hibernate.hbm2ddl.auto" value="update"/>
+                <!--<entry key="javax.persistence.schema-generation.database.action" value="create" />-->
             </map>
         </property>
     </bean>
