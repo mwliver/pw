@@ -3,26 +3,24 @@ package com.github.threads;
 import org.springframework.util.CollectionUtils;
 
 import java.io.File;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
-/**
- * Copyright by Coderion
- */
 public class DirectoryParser extends Thread {
 
     private final List<File> files;
     private boolean noDirectory = false;
 
-    public DirectoryParser(List<File> files) {
-        this.files = files;
+    public DirectoryParser(File file) {
+        this.files = Arrays.asList(file.listFiles());
     }
 
     @Override
     public void run() {
 
-        ArrayList<File> fileList = new ArrayList<>();
-        ArrayList<File> directoryList = new ArrayList<>();
+        CopyOnWriteArrayList<File> fileList = new CopyOnWriteArrayList<>();
+        CopyOnWriteArrayList<File> directoryList = new CopyOnWriteArrayList<>();
 
         // dla każdego katalogu weż pliki i odpal dla nich wątki
         while (!noDirectory) {
@@ -40,8 +38,10 @@ public class DirectoryParser extends Thread {
             }
 
             if (!CollectionUtils.isEmpty(directoryList)) {
-                DirectoryParser directoryParser = new DirectoryParser(directoryList);
-                directoryParser.start();
+                for (File directory : directoryList) {
+                    DirectoryParser directoryParser = new DirectoryParser(directory);
+                    directoryParser.start();
+                }
             }
 
             // czy jest jeszcze katalog do parsowania w ścieżce
@@ -50,3 +50,4 @@ public class DirectoryParser extends Thread {
         }
     }
 }
+
