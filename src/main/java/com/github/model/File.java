@@ -2,8 +2,6 @@ package com.github.model;
 
 import javax.persistence.*;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 public class File implements Serializable {
@@ -14,8 +12,8 @@ public class File implements Serializable {
 
     private String name;
 
-    @ElementCollection
-    private List<String> contentWords = new ArrayList<>();
+    @Lob
+    private String content;
 
     @ManyToOne
     private Directory directory;
@@ -36,12 +34,12 @@ public class File implements Serializable {
         this.id = id;
     }
 
-    public List<String> getContentWords() {
-        return contentWords;
+    public String getContent() {
+        return content;
     }
 
-    public void setContentWords(List<String> contentWords) {
-        this.contentWords = contentWords;
+    public void setContent(String content) {
+        this.content = content;
     }
 
     public Directory getDirectory() {
