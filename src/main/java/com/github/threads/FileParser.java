@@ -54,7 +54,9 @@ public class FileParser extends Thread {
                         "vbs",
                         "js",
                         "json",
-                        "yaml"
+                        "yaml",
+                        "xml",
+                        "ini"
                 };
 
                 if (Arrays.asList(extensions)
