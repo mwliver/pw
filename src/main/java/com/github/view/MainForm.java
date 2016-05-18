@@ -23,6 +23,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 @Service
@@ -30,13 +31,14 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class MainForm extends JFrame {
     public JFileChooser fileChooser;
     private JButton btnIndexFiles;
-    private JProgressBar progressBar1;
+    private JProgressBar progressBar;
     private JLabel labContent;
     private JPanel panel1;
     private JButton btnFindByContent;
     private JTextArea taContent;
     private JLabel labResult;
     private JTextArea taResult;
+    private SwingWorker<Integer, Integer> worker;
 
     @Autowired
     private DirectoryRepository directoryRepository;
@@ -51,19 +53,52 @@ public class MainForm extends JFrame {
         add(panel1);
 
         taResult.setEnabled(false);
-        progressBar1.setIndeterminate(false);
-        progressBar1.setValue(0);
 
         fileChooser.setVisible(false);
         fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
         fileChooser.setAcceptAllFileFilterUsed(false);
+        progressBar.setVisible(false);
 
         btnIndexFiles.addActionListener(e -> {
             fileChooser.setVisible(true);
+            progressBar.setVisible(true);
+            progressBar.setValue(0);
+            progressBar.setIndeterminate(false);
+            progressBar.setStringPainted(true);
             repaint();
 
             if (fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
                 File[] files = fileChooser.getSelectedFile().listFiles();
+
+                worker = new SwingWorker<Integer, Integer>() {
+                    @Override
+                    protected void process(List<Integer> chunks) {
+                        for (Integer chunk : chunks) {
+                            progressBar.setValue(chunk);
+                            repaint();
+                        }
+                    }
+
+                    @Override
+                    protected void done() {
+                        progressBar.setValue(100);
+                        repaint();
+                    }
+
+                    @Override
+                    public Integer doInBackground() {
+                        Random random = new Random();
+                        int progress = 0;
+                        setProgress(0);
+                        while (progress < 100) {
+                            progress += random.nextInt(10);
+                            setProgress(Math.min(progress, 100));
+                            publish(getProgress());
+                        }
+                        return getProgress();
+                    }
+                };
+                worker.execute();
 
                 if (files != null) {
                     CopyOnWriteArrayList<File> fileList = new CopyOnWriteArrayList<>(files);
@@ -151,9 +186,9 @@ public class MainForm extends JFrame {
         panel1 = new JPanel();
         panel1.setLayout(new GridLayoutManager(4, 3, new Insets(0, 0, 0, 0), -1, -1));
         panel1.setVisible(true);
-        progressBar1 = new JProgressBar();
-        progressBar1.setIndeterminate(true);
-        panel1.add(progressBar1, new GridConstraints(3, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+        progressBar = new JProgressBar();
+        progressBar.setIndeterminate(true);
+        panel1.add(progressBar, new GridConstraints(3, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
         fileChooser = new JFileChooser();
         panel1.add(fileChooser, new GridConstraints(2, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
         btnFindByContent = new JButton();
