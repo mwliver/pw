@@ -15,6 +15,10 @@ import javax.swing.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -30,6 +34,8 @@ public class MainForm extends JFrame {
     private JTextArea taContent;
     private JLabel labResult;
     private JTextArea taResult;
+    private JScrollPane jScrollPane1;
+    private JScrollPane jScrollPane2;
 
     @Autowired
     private DirectoryRepository directoryRepository;
@@ -42,6 +48,10 @@ public class MainForm extends JFrame {
 
     public MainForm() {
         add(panel1);
+
+        taResult.setEditable(false);
+        progressBar1.setIndeterminate(false);
+        progressBar1.setValue(0);
 
         fileChooser.setVisible(false);
         fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
@@ -103,6 +113,19 @@ public class MainForm extends JFrame {
                     sb.append("\\");
                     sb.append(file.getName());
                     sb.append("\n");
+
+                    File fileSys = new File(sb.toString());
+                    // porównaj to co w bazie z tym co w systemie i wyswietl tylko aktualne pliki
+                    if (fileSys.exists()) {
+                        try {
+                            String contents = new String(Files.readAllBytes(Paths.get(fileSys.getAbsolutePath())), StandardCharsets.UTF_8);
+                            if (contents.toLowerCase().contains(file.getContent())) {
+                                sb.append(sb.append("\n"));
+                            }
+                        } catch (IOException e1) {
+                            e1.printStackTrace();
+                        }
+                    }
                 }
 
                 taResult.setText(sb.toString());
