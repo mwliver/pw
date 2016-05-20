@@ -36,6 +36,7 @@ public class MainForm extends JFrame {
     private JTextArea taResult;
     private JScrollPane jScrollPane1;
     private JScrollPane jScrollPane2;
+    private SwingWorker<Integer, Integer> worker;
 
     @Autowired
     private DirectoryRepository directoryRepository;
@@ -50,50 +51,88 @@ public class MainForm extends JFrame {
         add(panel1);
 
         taResult.setEditable(false);
-        progressBar1.setIndeterminate(false);
-        progressBar1.setValue(0);
 
         fileChooser.setVisible(false);
         fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
         fileChooser.setAcceptAllFileFilterUsed(false);
 
+        progressBar1.setVisible(false);
+
         btnIndexFiles.addActionListener(e -> {
             fileChooser.setVisible(true);
+
+            progressBar1.setString("");
+            progressBar1.setVisible(true);
+            progressBar1.setValue(0);
+            progressBar1.setIndeterminate(false);
+            progressBar1.setStringPainted(true);
+
             repaint();
 
             if (fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
-                File[] files = fileChooser.getSelectedFile().listFiles();
-
-                if (files != null) {
-                    CopyOnWriteArrayList<File> fileList = new CopyOnWriteArrayList<>(files);
-
-                    for (File file : files) {
-                        if (file.isDirectory())
-                            FileWalker.getFiles(file, fileList);
-                        else
-                            fileList.add(file);
+                worker = new SwingWorker<Integer, Integer>() {
+                    @Override
+                    protected void done() {
+                        progressBar1.setValue(100);
+                        progressBar1.setString("Gotowe!");
+                        progressBar1.setVisible(false);
+                        repaint();
                     }
 
-                    if (!CollectionUtils.isEmpty(fileList)) {
-                        for (File file : fileList) {
-                            Directory directory = directoryRepository.getDirectoryByPath(file.getParentFile().getAbsolutePath());
+                    @Override
+                    public Integer doInBackground() {
+                        File[] files = fileChooser.getSelectedFile().listFiles();
 
-                            if (directory == null) {
-                                directory = new Directory();
+                        if (files != null) {
+                            CopyOnWriteArrayList<File> fileList = new CopyOnWriteArrayList<>(files);
 
-                                directory.setName(file.getParentFile().getName());
-                                directory.setPath(file.getParentFile().getAbsolutePath());
+                            progressBar1.setString("Wczytywanie plików...");
 
-                                directoryRepository.save(directory);
-                                directoryRepository.flush();
+                            for (File file : files) {
+                                if (file.isDirectory())
+                                    FileWalker.getFiles(file, fileList);
+                                else
+                                    fileList.add(file);
+                            }
+
+                            if (!CollectionUtils.isEmpty(fileList)) {
+                                double count = fileList.size();
+                                int counter = 0;
+
+                                progressBar1.setString("Zapis...");
+
+                                for (File file : fileList) {
+                                    Directory directory = directoryRepository.getDirectoryByPath(file.getParentFile().getAbsolutePath());
+
+                                    if (directory == null) {
+                                        directory = new Directory();
+
+                                        directory.setName(file.getParentFile().getName());
+                                        directory.setPath(file.getParentFile().getAbsolutePath());
+
+                                        directoryRepository.save(directory);
+                                        directoryRepository.flush();
+                                    }
+
+                                    progressBar1.setValue((int) (100 * counter / count));
+                                    System.out.println((int) (100 * counter / count));
+
+                                    counter++;
+                                }
+
+                                FileParser fileParser = context.getBean(FileParser.class);
+                                fileParser.setFiles(fileList);
+                                fileParser.start();
+
+                                progressBar1.setVisible(false);
                             }
                         }
 
-                        FileParser fileParser = context.getBean(FileParser.class);
-                        fileParser.setFiles(fileList);
-                        fileParser.start();
+                        return getProgress();
                     }
-                }
+                };
+
+                worker.execute();
             } else {
                 System.out.println("No Selection");
             }
@@ -110,7 +149,7 @@ public class MainForm extends JFrame {
 
                 for (com.github.model.File file : files) {
                     sb.append(file.getDirectory().getPath());
-                    sb.append("\\");
+                    sb.append(File.separator);
                     sb.append(file.getName());
                     sb.append("\n");
 
