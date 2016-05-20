@@ -100,6 +100,7 @@ public class MainForm extends JFrame {
 
                 for (com.github.model.File file : files) {
                     sb.append(file.getDirectory().getPath());
+                    sb.append("\\");
                     sb.append(file.getName());
                     sb.append("\n");
                 }

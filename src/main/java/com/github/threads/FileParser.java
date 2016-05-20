@@ -56,7 +56,8 @@ public class FileParser extends Thread {
                         "json",
                         "yaml",
                         "xml",
-                        "ini"
+                        "ini",
+                        "conf"
                 };
 
                 if (Arrays.asList(extensions)
@@ -71,15 +72,16 @@ public class FileParser extends Thread {
 
                         com.github.model.File fileDto = fileRepository.getFileByPath(file.getName(), directory.getId());
 
-                        if (file == null) {
+                        if (fileDto == null) {
                             fileDto = new com.github.model.File();
-                            fileDto.setContent(content);
-                            fileDto.setName(file.getName());
-
-                            fileDto.setDirectory(directory);
-                            fileRepository.save(fileDto);
-                            fileRepository.flush();
                         }
+                        fileDto.setContent(content);
+                        fileDto.setName(file.getName());
+
+                        fileDto.setDirectory(directory);
+                        fileRepository.save(fileDto);
+                        fileRepository.flush();
+
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
