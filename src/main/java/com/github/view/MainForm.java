@@ -56,12 +56,6 @@ public class MainForm extends JFrame {
         btnIndexFiles.addActionListener(e -> {
             fileChooser.setVisible(true);
 
-            progressBar1.setString("");
-            progressBar1.setVisible(true);
-            progressBar1.setValue(0);
-            progressBar1.setIndeterminate(false);
-            progressBar1.setStringPainted(true);
-
             repaint();
 
             if (fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {

@@ -34,14 +34,13 @@ public class DirectoryParser extends SwingWorker<Void, Integer> {
     }
 
     @Override
-    protected void done() {
-        progressBar.setValue(100);
-        progressBar.setString("Gotowe!");
-        progressBar.setVisible(false);
-    }
-
-    @Override
     public Void doInBackground() {
+        this.progressBar.setString("");
+        this.progressBar.setVisible(true);
+        this.progressBar.setValue(0);
+        this.progressBar.setIndeterminate(false);
+        this.progressBar.setStringPainted(true);
+
         File[] files = fileChooser.getSelectedFile().listFiles();
 
         if (files != null) {
@@ -82,9 +81,9 @@ public class DirectoryParser extends SwingWorker<Void, Integer> {
 
                 FileParser fileParser = context.getBean(FileParser.class);
                 fileParser.setFiles(fileList);
+                fileParser.setProgressBar(progressBar);
+                fileParser.setFileChooser(fileChooser);
                 fileParser.execute();
-
-                progressBar.setVisible(false);
             }
         }
 

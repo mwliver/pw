@@ -21,19 +21,46 @@ import java.util.stream.Collectors;
 @Service
 @Scope("prototype")
 public class FileParser extends SwingWorker<Void, Integer> {
-
+    private JProgressBar progressBar;
+    private JFileChooser fileChooser;
     @Autowired
     private FileRepository fileRepository;
     @Autowired
     private DirectoryRepository directoryRepository;
     private List<File> files;
 
+    public void setProgressBar(JProgressBar progressBar) {
+        this.progressBar = progressBar;
+    }
+
+    public void setFileChooser(JFileChooser fileChooser) {
+        this.fileChooser = fileChooser;
+    }
+
     public void setFiles(List<File> files) {
         this.files = files;
     }
 
     @Override
+    protected void done() {
+        progressBar.setValue(100);
+        progressBar.setString("Gotowe!");
+        progressBar.setVisible(false);
+    }
+
+    @Override
     public Void doInBackground() {
+        this.progressBar.setString("");
+        this.progressBar.setVisible(true);
+        this.progressBar.setValue(0);
+        this.progressBar.setIndeterminate(false);
+        this.progressBar.setStringPainted(true);
+
+        double count = files.size();
+        int counter = 0;
+
+        progressBar.setString("Zapis plików...");
+
         for (java.io.File file : files) {
             if (!file.isDirectory()) {
 
@@ -82,11 +109,15 @@ public class FileParser extends SwingWorker<Void, Integer> {
                         fileDto.setDirectory(directory);
                         fileRepository.save(fileDto);
                         fileRepository.flush();
-
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
                 }
+
+                progressBar.setValue((int) (100 * counter / count));
+                System.out.println(progressBar.getValue());
+
+                counter++;
             }
         }
 
