@@ -1,4 +1,4 @@
-package com.github.threads;
+package com.github.utils;
 
 import java.io.File;
 import java.util.concurrent.CopyOnWriteArrayList;

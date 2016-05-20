@@ -1,4 +1,4 @@
-package com.github.threads;
+package com.github.utils;
 
 import com.github.dao.DirectoryRepository;
 import com.github.dao.FileRepository;
@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
+import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -19,7 +20,7 @@ import java.util.stream.Collectors;
 
 @Service
 @Scope("prototype")
-public class FileParser extends Thread {
+public class FileParser extends SwingWorker<Void, Integer> {
 
     @Autowired
     private FileRepository fileRepository;
@@ -32,7 +33,7 @@ public class FileParser extends Thread {
     }
 
     @Override
-    public void run() {
+    public Void doInBackground() {
         for (java.io.File file : files) {
             if (!file.isDirectory()) {
 
@@ -88,5 +89,7 @@ public class FileParser extends Thread {
                 }
             }
         }
+
+        return null;
     }
 }

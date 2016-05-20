@@ -2,14 +2,11 @@ package com.github.view;
 
 import com.github.dao.DirectoryRepository;
 import com.github.dao.FileRepository;
-import com.github.model.Directory;
-import com.github.threads.FileParser;
-import com.github.threads.FileWalker;
+import com.github.utils.DirectoryParser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 
 import javax.swing.*;
 import java.awt.event.MouseAdapter;
@@ -20,7 +17,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 @Service
 @Scope("prototype")
@@ -36,7 +32,6 @@ public class MainForm extends JFrame {
     private JTextArea taResult;
     private JScrollPane jScrollPane1;
     private JScrollPane jScrollPane2;
-    private SwingWorker<Integer, Integer> worker;
 
     @Autowired
     private DirectoryRepository directoryRepository;
@@ -70,69 +65,10 @@ public class MainForm extends JFrame {
             repaint();
 
             if (fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
-                worker = new SwingWorker<Integer, Integer>() {
-                    @Override
-                    protected void done() {
-                        progressBar1.setValue(100);
-                        progressBar1.setString("Gotowe!");
-                        progressBar1.setVisible(false);
-                        repaint();
-                    }
-
-                    @Override
-                    public Integer doInBackground() {
-                        File[] files = fileChooser.getSelectedFile().listFiles();
-
-                        if (files != null) {
-                            CopyOnWriteArrayList<File> fileList = new CopyOnWriteArrayList<>(files);
-
-                            progressBar1.setString("Wczytywanie plików...");
-
-                            for (File file : files) {
-                                if (file.isDirectory())
-                                    FileWalker.getFiles(file, fileList);
-                                else
-                                    fileList.add(file);
-                            }
-
-                            if (!CollectionUtils.isEmpty(fileList)) {
-                                double count = fileList.size();
-                                int counter = 0;
-
-                                progressBar1.setString("Zapis...");
-
-                                for (File file : fileList) {
-                                    Directory directory = directoryRepository.getDirectoryByPath(file.getParentFile().getAbsolutePath());
-
-                                    if (directory == null) {
-                                        directory = new Directory();
-
-                                        directory.setName(file.getParentFile().getName());
-                                        directory.setPath(file.getParentFile().getAbsolutePath());
-
-                                        directoryRepository.save(directory);
-                                        directoryRepository.flush();
-                                    }
-
-                                    progressBar1.setValue((int) (100 * counter / count));
-                                    System.out.println((int) (100 * counter / count));
-
-                                    counter++;
-                                }
-
-                                FileParser fileParser = context.getBean(FileParser.class);
-                                fileParser.setFiles(fileList);
-                                fileParser.start();
-
-                                progressBar1.setVisible(false);
-                            }
-                        }
-
-                        return getProgress();
-                    }
-                };
-
-                worker.execute();
+                DirectoryParser directoryParser = context.getBean(DirectoryParser.class);
+                directoryParser.setProgressBar(progressBar1);
+                directoryParser.setFileChooser(fileChooser);
+                directoryParser.execute();
             } else {
                 System.out.println("No Selection");
             }
