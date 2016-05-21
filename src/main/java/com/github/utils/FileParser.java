@@ -1,4 +1,4 @@
-package com.github.threads;
+package com.github.utils;
 
 import com.github.dao.DirectoryRepository;
 import com.github.dao.FileRepository;
@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
+import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -19,20 +20,47 @@ import java.util.stream.Collectors;
 
 @Service
 @Scope("prototype")
-public class FileParser extends Thread {
-
+public class FileParser extends SwingWorker<Void, Integer> {
+    private JProgressBar progressBar;
+    private JFileChooser fileChooser;
     @Autowired
     private FileRepository fileRepository;
     @Autowired
     private DirectoryRepository directoryRepository;
     private List<File> files;
 
+    public void setProgressBar(JProgressBar progressBar) {
+        this.progressBar = progressBar;
+    }
+
+    public void setFileChooser(JFileChooser fileChooser) {
+        this.fileChooser = fileChooser;
+    }
+
     public void setFiles(List<File> files) {
         this.files = files;
     }
 
     @Override
-    public void run() {
+    protected void done() {
+        progressBar.setValue(100);
+        progressBar.setString("Gotowe!");
+        progressBar.setVisible(false);
+    }
+
+    @Override
+    public Void doInBackground() {
+        this.progressBar.setString("");
+        this.progressBar.setVisible(true);
+        this.progressBar.setValue(0);
+        this.progressBar.setIndeterminate(false);
+        this.progressBar.setStringPainted(true);
+
+        double count = files.size();
+        int counter = 0;
+
+        progressBar.setString("Zapis plików...");
+
         for (java.io.File file : files) {
             if (!file.isDirectory()) {
 
@@ -56,7 +84,8 @@ public class FileParser extends Thread {
                         "json",
                         "yaml",
                         "xml",
-                        "ini"
+                        "ini",
+                        "conf"
                 };
 
                 if (Arrays.asList(extensions)
@@ -71,7 +100,6 @@ public class FileParser extends Thread {
 
                         com.github.model.File fileDto = fileRepository.getFileByPath(file.getName(), directory.getId());
 
-                        // jeżeli nie ma w bazie to zrób nowy w przeciwnym wypadku nadpisz istniejący
                         if (fileDto == null) {
                             fileDto = new com.github.model.File();
                         }
@@ -85,7 +113,14 @@ public class FileParser extends Thread {
                         e.printStackTrace();
                     }
                 }
+
+                progressBar.setValue((int) (100 * counter / count));
+                System.out.println(progressBar.getValue());
+
+                counter++;
             }
         }
+
+        return null;
     }
 }
